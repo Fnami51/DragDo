@@ -14,6 +14,8 @@ function Item({ id, tasks, position, isChange }: ItemType) {
   const animatedPosition = useRef(new Animated.ValueXY({ x: position.x, y: position.y })).current;
   const [dragging, setDragging] = useState(false);
 
+  const currentPosition = useRef({ x: position.x, y: position.y }).current;
+
   useEffect(() => {
     animatedPosition.setValue({ x: position.x, y: position.y });
   }, [position]);
@@ -25,18 +27,31 @@ function Item({ id, tasks, position, isChange }: ItemType) {
       onPanResponderGrant: () => {
         setDragging(true);
       },
-      onPanResponderMove: Animated.event(
-        [
-          null,
-          {
-            dx: animatedPosition.x,
-            dy: animatedPosition.y,
-          },
-        ],
-        { useNativeDriver: false }
-      ),
+      onPanResponderMove: (event, gestureState) => {
+        Animated.event(
+          [
+            null,
+            {
+              dx: animatedPosition.x,
+              dy: animatedPosition.y,
+            },
+          ],
+          { useNativeDriver: false }
+        )(event, gestureState);
+
+        currentPosition.x = position.x + gestureState.dx;
+        currentPosition.y = position.y + gestureState.dy;
+      },
       onPanResponderRelease: () => {
         setDragging(false);
+
+        setItem((prevItems: ItemType[]) =>
+          prevItems.map(item =>
+            item.id === id
+              ? { ...item, position: { x: currentPosition.x, y: currentPosition.y } }
+              : item
+          )
+        );
       },
     })
   ).current;
