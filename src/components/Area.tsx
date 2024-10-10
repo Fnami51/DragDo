@@ -1,3 +1,4 @@
+import React from 'react';
 import { View } from 'react-native';
 import { useItems } from '../hooks/useItems';
 import { ItemType } from '../interface/ItemType';

@@ -1,5 +1,5 @@
+import React from 'react';
 import { View, Text, TouchableOpacity, PanResponder, Animated } from 'react-native';
-import Draggable from 'react-native-draggable';
 import { useItems } from '../hooks/useItems';
 import { ItemType } from '../interface/ItemType';
 import Svg, { Path } from 'react-native-svg';
@@ -74,6 +74,7 @@ function Item({ id, tasks, position, isChange }: ItemType) {
 
   return (
     <Animated.View
+      testID="animated-item"
       style={[
         styles.background,
         {

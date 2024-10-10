@@ -1,3 +1,4 @@
+import React from 'react';
 import { View, Text } from 'react-native';
 import Checkbox from 'expo-checkbox';
 import { TaskType } from '../interface/TaskType';

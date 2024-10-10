@@ -1,3 +1,4 @@
+import React from 'react';
 import { styles } from './main.styles';
 import { SafeAreaView } from 'react-native';
 import Header from './components/Header';

@@ -1,3 +1,4 @@
+import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { useItems } from '../hooks/useItems';
 import Svg, { Path } from 'react-native-svg';

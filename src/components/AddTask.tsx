@@ -1,3 +1,4 @@
+import React from 'react';
 import { useState } from 'react';
 import { TextInput } from 'react-native';
 import { useItems } from '../hooks/useItems';
