@@ -39,12 +39,13 @@ function Item({ id, tasks, position, isChange }: ItemType) {
           { useNativeDriver: false }
         )(event, gestureState);
 
+        console.log('Позиция до: ', position)
         currentPosition.x = position.x + gestureState.dx;
         currentPosition.y = position.y + gestureState.dy;
       },
       onPanResponderRelease: () => {
         setDragging(false);
-
+        console.log('Позиция после: ', currentPosition)
         setItem((prevItems: ItemType[]) =>
           prevItems.map(item =>
             item.id === id
