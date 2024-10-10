@@ -5,59 +5,98 @@ import Item from './Item';
 
 jest.mock('../hooks/useItems', () => ({
   useItems: () => ({
-    setItem: jest.fn(), 
+    setItem: jest.fn(),
   }),
 }));
 
 describe('Компонент Item', () => {
-  const setItemMock = jest.fn();
+  const setItemMock = jest.fn(); 
+
+  const mockItem = {
+    id: 1,
+    tasks: [
+      { task_id: 1, title: 'first', isComplete: false },
+      { task_id: 2, title: 'second', isComplete: true },
+    ],
+    position: { x: 10, y: 10 }, // Начало
+    isChange: false,
+  };
 
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
-  const mockItem = {
-    id: 1,
-    tasks: [{ task_id: 1, title: 'first', isComplete: false }, { task_id: 2, title: 'second', isComplete: true }],
-    position: { x: 0, y: 0 },
-    isChange: false,
-  };
-
   let component: any;
 
   beforeEach(() => {
-    component = render(<Item {...mockItem} />);
+    component = render(<Item {...mockItem} />); 
   });
 
-  test('Переместить элемент на новую позицию и оставить там', () => {
-    const animatedView = component.getByTestId('animated-item'); 
+  test('Перемещение Item и возвращение обратно', () => {
+    const animatedView = component.getByTestId('animated-item');
+
+    const startPosition = { ...mockItem.position };
+    console.info('Начальная позиция:', startPosition);
 
     act(() => {
+      console.info('Начало первого перетаскивания');
       fireEvent(animatedView, 'panResponderGrant'); 
     });
 
     act(() => {
       fireEvent(animatedView, 'panResponderMove', {
         nativeEvent: {},
-        gestureState: { dx: 150, dy: 50 }, 
+        gestureState: { dx: 100, dy: 50 }, 
       });
     });
 
-    expect(setItemMock).toHaveBeenCalledWith(expect.any(Function));
+    act(() => {
+      console.info('Завершили первое перетаскивание');
+      fireEvent(animatedView, 'panResponderRelease');
+    });
+
+    const firstCall = setItemMock.mock.calls[0][0];
+    const updatedItemFirstMove = firstCall(mockItem);
+    
+    const firstPosition = updatedItemFirstMove.position;
+    
+    console.info('Позиция после первого перетаскивания:', firstPosition);
+
+    const expectedPositionAfterFirstMove = { x: 110, y: 60 }; // Прибавляем перемещение к первоначальной позиции
+    expect(firstPosition).toEqual(expectedPositionAfterFirstMove); 
+    console.info('Позиция совпадает с ожидаемой:', firstPosition);
+
+    // Перетаскивание обратно
+    act(() => {
+      console.info('Начало второго перетаскивания');
+      fireEvent(animatedView, 'panResponderGrant'); 
+    });
+
+    act(() => {
+      fireEvent(animatedView, 'panResponderMove', {
+        nativeEvent: {},
+        gestureState: { dx: -100, dy: -50 }, 
+      });
+    });
 
     act(() => {
       fireEvent(animatedView, 'panResponderRelease'); 
     });
 
-    expect(setItemMock).toHaveBeenCalledWith(expect.any(Function));
+    const secondCall = setItemMock.mock.calls[1][0];
+    const updatedItemSecondMove = secondCall(updatedItemFirstMove); 
+    
+    const finishPosition = updatedItemSecondMove.position; 
+    console.info('Позиция после второго перетаскивания:', finishPosition);
+    
+    expect(finishPosition).toEqual(startPosition); // Должны совпадать с первоначальными
 
-    act(() => {
-      fireEvent(animatedView, 'panResponderMove', {
-        nativeEvent: {},
-        gestureState: { dx: 0, dy: 0 }, 
+    // Отклонение
+    if (finishPosition.x !== startPosition.x || finishPosition.y !== startPosition.y) {
+      console.error('Отклонение:', {
+        ожидаемая: startPosition,
+        фактическая: finishPosition,
       });
-    });
-
-    expect(setItemMock).toHaveBeenCalledTimes(2); 
+    }
   });
 });
