@@ -1,6 +1,6 @@
 import React from 'react';
 import { useState } from 'react';
-import { TextInput } from 'react-native';
+import { Platform, TextInput } from 'react-native';
 import { useItems } from '../hooks/useItems';
 import { ItemType } from '../interface/ItemType';
 import styles from './add_task.styles';
@@ -54,7 +54,7 @@ function AddTask({ id }: AddTaskProps) {
       onChangeText={handleInputChange}
       onSubmitEditing={handleKeyDown} // Используем onSubmitEditing для обработки нажатия Enter
       placeholder="Add a new task"
-      returnKeyType="done" // Кнопка Enter будет отображаться как "Done" на мобильных устройствах
+      {...(Platform.OS === 'web' ? { enterKeyHint: 'done' } : { returnKeyType: 'done' })} // Кнопка Enter будет отображаться как "Done" на мобильных устройствах
     />
   );
 }
