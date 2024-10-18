@@ -13,6 +13,8 @@ export const styles = StyleSheet.create({
   bounds: {
     width: '100%', // Ширина контейнера
     height: '100%', // Высота контейнера
-    position: 'relative', // Позиционирование
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center'
   },
 });

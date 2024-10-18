@@ -4,6 +4,8 @@ const styles = StyleSheet.create({
   background: {
     backgroundColor: 'white',
     borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#4b4b4b',
     padding: 5,
     width: 160,
   },

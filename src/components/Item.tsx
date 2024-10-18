@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, PanResponder, Animated } from 'react-native';
+import { View, Text, TouchableOpacity, Dimensions } from 'react-native';
 import { useItems } from '../hooks/useItems';
 import { ItemType } from '../interface/ItemType';
 import Svg, { Path } from 'react-native-svg';
@@ -7,62 +7,64 @@ import styles from './item.styles';
 import Task from './Task';
 import AddTask from './AddTask';
 import { useRef, useState, useEffect } from 'react';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import Animated, { useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
+import { TaskType } from '../interface/TaskType';
 
-function Item({ id, tasks, position, isChange }: ItemType) {
+function clamp(val: number, min: number, max: number) {
+  return Math.min(Math.max(val, min), max);
+}
+
+const { width, height } = Dimensions.get('screen');
+
+interface ItemProps {
+  id: number
+    tasks: TaskType[]
+    position: {
+        x: number;
+        y: number;
+    }
+    isChange: boolean
+  bounds: { width: number; height: number; }
+}
+
+function Item({ id, tasks, position, isChange, bounds }: ItemProps) {
  const { setItem } = useItems()
 
-  const currentPosition = useRef({ x: position.x, y: position.y }).current;
+ const translationX = useSharedValue(0);
+  const translationY = useSharedValue(0);
+  const prevTranslationX = useSharedValue(0);
+  const prevTranslationY = useSharedValue(0);
 
-  const animatedPosition = useRef(new Animated.ValueXY({ x: position.x, y: position.y })).current;
-  const [dragging, setDragging] = useState(false);
+ const animatedStyles = useAnimatedStyle(() => ({
+  transform: [
+    { translateX: translationX.value },
+    { translateY: translationY.value },
+  ],
+}));
 
-  useEffect(() => {
-    console.log("Поступающая позиция: ", position)
+const pan = Gesture.Pan()
+.minDistance(1)
+.onStart(() => {
+  prevTranslationX.value = translationX.value;
+  prevTranslationY.value = translationY.value;
+})
+.onUpdate((event) => {
+  const maxTranslateX = width / 2 - bounds.width / 2; // Используем ширину блока
+  const maxTranslateY = height / 2 - bounds.height / 2; // Используем высоту блока
 
-    animatedPosition.setValue({ x: position.x, y: position.y });
-  }, [position]);
-
-  const panResponder = useRef(
-    PanResponder.create({
-      onStartShouldSetPanResponder: () => true,
-      onMoveShouldSetPanResponder: () => true,
-      onPanResponderGrant: () => {
-        
-        console.log('Позиция до: ', position) //Вот сюда пробрасывается нулевая позиция
-        setDragging(true);
-      },
-      onPanResponderMove: (event, gestureState) => {
-        Animated.event(
-          [
-            null,
-            {
-              dx: animatedPosition.x,
-              dy: animatedPosition.y,
-            },
-          ],
-          { useNativeDriver: false }
-        )(event, gestureState);
-
-        console.log("Перемещение: ", gestureState.dx, gestureState.dy)
-        console.log(gestureState)
-        currentPosition.x = position.x + gestureState.dx;
-        currentPosition.y = position.y + gestureState.dy;
-      },
-      onPanResponderRelease: () => {
-        
-        console.log('Позиция после: ', currentPosition)
-
-        setItem((prevItems) =>
-          prevItems.map(item =>
-            item.id === id
-              ? { ...item, position: { x: currentPosition.x, y: currentPosition.y } }
-              : item
-          )
-        );
-        setDragging(false);
-      },
-    })
-  ).current;
+  translationX.value = clamp(
+    prevTranslationX.value + event.translationX,
+    -maxTranslateX,
+    maxTranslateX
+  );
+  translationY.value = clamp(
+    prevTranslationY.value + event.translationY,
+    -maxTranslateY,
+    maxTranslateY
+  );
+})
+.runOnJS(true);
 
   function handleDelete() {
     setItem((prevItems: ItemType[]) =>
@@ -81,16 +83,13 @@ function Item({ id, tasks, position, isChange }: ItemType) {
   }
 
   return (
+    <GestureDetector gesture={pan}>
     <Animated.View
       testID="animated-item"
       style={[
         styles.background,
-        {
-          transform: animatedPosition.getTranslateTransform(),
-          opacity: dragging ? 0.8 : 1,
-        },
+        animatedStyles
       ]}
-      {...panResponder.panHandlers}
     >
       <View style={styles.buttonBox}>
         <TouchableOpacity
@@ -117,6 +116,7 @@ function Item({ id, tasks, position, isChange }: ItemType) {
         {isChange ? <AddTask id={id} /> : null}
       </View>
     </Animated.View>
+    </GestureDetector>
   );
 }
 
